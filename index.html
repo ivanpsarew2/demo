@@ -133,6 +133,43 @@
     /* ========= Empty state ========= */
     .empty { text-align: center; color: var(--text-secondary); padding: 30px 0; }
   </style>
+  <script type="text/javascript">
+// Duration in milliseconds to wait while the Kameleoon application file is loaded
+const kameleoonLoadingTimeout = 1000;
+
+window.kameleoonQueue = window.kameleoonQueue || [];
+window.kameleoonStartLoadTime = new Date().getTime();
+if (
+!document.getElementById('kameleoonLoadingStyleSheet') &&
+!window.kameleoonDisplayPageTimeOut
+) {
+const kameleoonS = document.getElementsByTagName('script')[0];
+const kameleoonCc =
+'* { visibility: hidden !important; background-image: none !important; }';
+const kameleoonStn = document.createElement('style');
+kameleoonStn.type = 'text/css';
+[kameleoonStn.id](http://kameleoonstn.id/) = 'kameleoonLoadingStyleSheet';
+if (kameleoonStn.styleSheet) {
+kameleoonStn.styleSheet.cssText = kameleoonCc;
+} else {
+kameleoonStn.appendChild(document.createTextNode(kameleoonCc));
+}
+kameleoonS.parentNode.insertBefore(kameleoonStn, kameleoonS);
+window.kameleoonDisplayPage = function (fromEngine) {
+if (!fromEngine) {
+window.kameleoonTimeout = true;
+}
+if (kameleoonStn.parentNode) {
+kameleoonStn.parentNode.removeChild(kameleoonStn);
+}
+};
+window.kameleoonDisplayPageTimeOut = window.setTimeout(
+window.kameleoonDisplayPage,
+kameleoonLoadingTimeout,
+);
+}
+</script>
+<script type="text/javascript" src="[//29s17ifdqv.kameleoon.io/engine.js](https://29s17ifdqv.kameleoon.io/engine.js)" async="true" fetchpriority="high"></script>
 </head>
 
 <body>
