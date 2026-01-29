@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Личный блог</title>
+  <style>
+    /* ========= Material Design — цветовая тема ========= */
+    :root {
+      --primary: #009688;         /* teal 500 */
+      --primary-dark: #00796b;    /* teal 700 */
+      --primary-light: #b2dfdb;   /* teal 100 */
+      --secondary: #00bcd4;       /* cyan 500 */
+      --secondary-dark: #008ba3;  /* cyan 700 */
+      --bg: #f4f7f7;
+      --surface: #ffffff;
+      --text: #1a1f24;
+      --text-secondary: #44515a;
+      --border: #e3ecec;
+      --error: #d32f2f;
+      --success: #2e7d32;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font: 16px/1.5 Inter, Roboto, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    /* ========= App Bar ========= */
+    .appbar {
+      position: sticky; top: 0; z-index: 10;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      color: #fff;
+      padding: 14px 20px;
+      display: flex; align-items: center; gap: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.2);
+    }
+    .appbar__logo {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: rgba(255,255,255,.2);
+      display: grid; place-items: center; font-weight: 700;
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,.25);
+    }
+    .appbar__title { font-size: 1.15rem; font-weight: 700; letter-spacing: .3px; }
+
+    /* ========= Layout ========= */
+    .container {
+      max-width: 1200px; margin: 20px auto; padding: 0 16px;
+      display: grid; grid-template-columns: 2fr 1fr; gap: 20px;
+    }
+    @media (max-width: 900px) {
+      .container { grid-template-columns: 1fr; }
+    }
+
+    /* ========= Cards ========= */
+    .card {
+      background: var(--surface);
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.08);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .card__header { padding: 16px 20px 0 20px; }
+    .card__title { margin: 0 0 4px; font-size: 1.15rem; }
+    .card__subtitle { margin: 0 0 8px; color: var(--text-secondary); font-size: .9rem; }
+    .card__content { padding: 10px 20px 16px; color: var(--text-secondary); white-space: pre-wrap; }
+    .card__media { width: 100%; display: block; cursor: zoom-in; max-height: 420px; object-fit: cover; }
+    .card__footer { padding: 12px 20px 18px; display: flex; justify-content: space-between; align-items: center; gap: 8px; border-top: 1px solid var(--border); }
+
+    /* ========= Buttons & Inputs (Material-ish) ========= */
+    .btn {
+      position: relative; overflow: hidden; cursor: pointer; user-select: none;
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 14px; border-radius: 999px; border: none; outline: none;
+      background: var(--primary); color: #fff; font-weight: 600; letter-spacing: .3px;
+      box-shadow: 0 2px 6px rgba(0,150,136,.3);
+      transition: transform .06s ease, box-shadow .2s ease, background .2s ease;
+    }
+    .btn:hover { background: var(--primary-dark); }
+    .btn:active { transform: translateY(1px); }
+    .btn--secondary { background: var(--secondary); box-shadow: 0 2px 6px rgba(0,188,212,.3); }
+    .btn--secondary:hover { background: var(--secondary-dark); }
+    .btn--text { background: transparent; color: var(--primary); box-shadow: none; padding: 8px 10px; }
+    .btn--text:hover { background: rgba(0,0,0,.04); }
+
+    .ripple { position: absolute; border-radius: 50%; transform: scale(0); animation: ripple .6s linear; background: rgba(255,255,255,.6); pointer-events: none; }
+    @keyframes ripple { to { transform: scale(4); opacity: 0; } }
+
+    .field { display: grid; gap: 6px; margin-bottom: 14px; }
+    .label { font-size: .9rem; color: var(--text-secondary); }
+    .input, .textarea {
+      background: #fff; border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px 14px; outline: none; font: inherit;
+      transition: border .2s ease, box-shadow .2s ease;
+    }
+    .input:focus, .textarea:focus { border-color: var(--secondary); box-shadow: 0 0 0 3px rgba(0,188,212,.15); }
+    .textarea { min-height: 100px; resize: vertical; }
+
+    .hint { font-size: .85rem; color: var(--text-secondary); }
+    .error { color: var(--error); font-size: .9rem; }
+
+    /* ========= Post composer ========= */
+    .composer { position: sticky; top: 84px; }
+    .composer__actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+    /* ========= Post list ========= */
+    .posts { display: grid; gap: 16px; }
+
+    /* ========= Chips / Meta ========= */
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: var(--primary-light); color: var(--primary-dark); font-weight: 600; font-size: .85rem;
+    }
+
+    /* ========= Comments ========= */
+    .comments { padding: 0 20px 16px; border-top: 1px solid var(--border); }
+    .comment { padding: 10px 0; border-bottom: 1px dashed var(--border); }
+    .comment:last-child { border-bottom: none; }
+    .comment__author { font-weight: 700; }
+    .comment__body { color: var(--text-secondary); white-space: pre-wrap; }
+
+    .comment-form { display: grid; gap: 8px; margin-top: 8px; }
+
+    /* ========= Image viewer (lightbox) ========= */
+    .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,.85); display: none; align-items: center; justify-content: center; z-index: 999; }
+    .lightbox.open { display: flex; }
+    .lightbox__img { max-width: 92vw; max-height: 86vh; box-shadow: 0 10px 30px rgba(0,0,0,.6); border-radius: 12px; }
+    .lightbox__close { position: fixed; top: 14px; right: 14px; }
+
+    /* ========= Empty state ========= */
+    .empty { text-align: center; color: var(--text-secondary); padding: 30px 0; }
+  </style>
+</head>
+
+<body>
+  <header class="appbar">
+    <div class="appbar__logo" aria-hidden="true">B</div>
+    <div class="appbar__title">Личный блог</div>
+    <div style="margin-left:auto"></div>
+    <button class="btn btn--secondary" id="exportBtn" title="Экспортировать посты JSON">Экспорт</button>
+    <button class="btn btn--text" id="resetBtn" title="Сбросить данные и загрузить демо">Сброс</button>
+  </header>
+
+  <main class="container">
+    <!-- Список постов -->
+    <section>
+      <div class="posts" id="posts"></div>
+      <div class="empty" id="emptyState" hidden>Пока нет постов. Добавьте первый →</div>
+    </section>
+
+    <!-- Создание поста -->
+    <aside class="card composer" aria-labelledby="composerTitle">
+      <div class="card__header">
+        <h2 class="card__title" id="composerTitle">Новый пост</h2>
+        <p class="card__subtitle">Поделитесь мыслями. Картинка — по желанию.</p>
+      </div>
+      <div class="card__content">
+        <form id="postForm">
+          <div class="field">
+            <label class="label" for="title">Заголовок</label>
+            <input class="input" id="title" name="title" required maxlength="160" placeholder="Например: Почему я люблю JS" />
+          </div>
+          <div class="field">
+            <label class="label" for="content">Текст</label>
+            <textarea class="textarea" id="content" name="content" required placeholder="Основная мысль, абзацы, идеи..."></textarea>
+            <span class="hint">Поддерживаются переносы строк. Смайлики тоже 🙂</span>
+          </div>
+          <div class="field">
+            <label class="label" for="image">URL картинки (необязательно)</label>
+            <input class="input" id="image" name="image" placeholder="https://пример.сайт/image.jpg" />
+          </div>
+          <div class="composer__actions">
+            <button type="reset" class="btn btn--text">Очистить</button>
+            <button type="submit" class="btn">Опубликовать</button>
+          </div>
+          <p class="error" id="postError" hidden></p>
+        </form>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Модальное окно просмотра картинки -->
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Просмотр изображения">
+    <img class="lightbox__img" id="lightboxImg" alt="Просмотр" />
+    <button class="btn lightbox__close" id="lightboxClose" aria-label="Закрыть">Закрыть</button>
+  </div>
+
+  <script>
+    // ========= Утилиты хранения =========
+    const LS_KEY = 'blog_posts_v1';
+
+    function uid() {
+      return Math.random().toString(36).slice(2) + Date.now().toString(36);
+    }
+
+    function loadPosts() {
+      try {
+        const raw = localStorage.getItem(LS_KEY);
+        if (!raw) return null;
+        const data = JSON.parse(raw);
+        return Array.isArray(data) ? data : null;
+      } catch (e) { return null; }
+    }
+
+    function savePosts(posts) {
+      localStorage.setItem(LS_KEY, JSON.stringify(posts));
+    }
+
+    function seedDemoIfEmpty() {
+      const current = loadPosts();
+      if (current && current.length) return current;
+      const demo = [
+        {
+          id: uid(),
+          title: 'Знакомство с блогом',
+          content: 'Привет! Это мой новый блог на чистом HTML/CSS/JS. Здесь будут заметки о фронтенде, продуктивности и путешествиях.\n\nВ комментариях ниже — расскажите, что вы хотите здесь видеть!',
+          image: 'https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=1400&auto=format&fit=crop',
+          createdAt: Date.now() - 1000 * 60 * 60 * 24 * 2,
+          comments: [
+            { id: uid(), author: 'Гость', body: 'Удачи с блогом!', createdAt: Date.now() - 1000 * 60 * 60 * 30 },
+          ],
+        },
+        {
+          id: uid(),
+          title: 'Мини-гайд: полезные сниппеты',
+          content: '— Дебаунс ввода: setTimeout + clearTimeout\n— Копирование в буфер: navigator.clipboard.writeText\n— Запросы: fetch + AbortController',
+          image: '',
+          createdAt: Date.now() - 1000 * 60 * 60 * 5,
+          comments: [],
+        },
+        {
+          id: uid(),
+          title: 'Кофе и код',
+          content: 'Иногда лучшая идея приходит с первой чашкой кофе ☕️. Делитесь своими ритуалами для продуктивной работы.',
+          image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=80&w=1400&auto=format&fit=crop',
+          createdAt: Date.now() - 1000 * 60 * 20,
+          comments: [
+            { id: uid(), author: 'Аноним', body: 'Музыка lo-fi и Pomodoro — топ!', createdAt: Date.now() - 1000 * 60 * 10 },
+          ],
+        },
+      ];
+      savePosts(demo);
+      return demo;
+    }
+
+    // ========= Рендер =========
+    const postsEl = document.getElementById('posts');
+    const emptyStateEl = document.getElementById('emptyState');
+
+    function fmtDate(ts) {
+      const d = new Date(ts);
+      return d.toLocaleString('ru-RU', { dateStyle: 'medium', timeStyle: 'short' });
+    }
+
+    function escapeHTML(str) {
+      return str.replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[s]));
+    }
+
+    function renderPosts(posts) {
+      postsEl.innerHTML = '';
+      if (!posts.length) {
+        emptyStateEl.hidden = false;
+        return;
+      }
+      emptyStateEl.hidden = true;
+
+      // Сортировка по дате (новые сверху)
+      const sorted = [...posts].sort((a,b) => b.createdAt - a.createdAt);
+
+      for (const post of sorted) {
+        const card = document.createElement('article');
+        card.className = 'card';
+        card.dataset.postId = post.id;
+
+        const header = document.createElement('div');
+        header.className = 'card__header';
+        header.innerHTML = `
+          <h3 class="card__title">${escapeHTML(post.title)}</h3>
+          <p class="card__subtitle">Опубликовано: ${fmtDate(post.createdAt)}</p>
+        `;
+        card.appendChild(header);
+
+        if (post.image) {
+          const img = document.createElement('img');
+          img.className = 'card__media';
+          img.src = post.image;
+          img.alt = post.title;
+          img.loading = 'lazy';
+          img.addEventListener('click', () => openLightbox(post.image));
+          card.appendChild(img);
+        }
+
+        const content = document.createElement('div');
+        content.className = 'card__content';
+        content.textContent = post.content; // white-space: pre-wrap применён в CSS
+        card.appendChild(content);
+
+        const footer = document.createElement('div');
+        footer.className = 'card__footer';
+        footer.innerHTML = `
+          <span class="chip" title="Кол-во комментариев">
+            💬 ${post.comments?.length || 0}
+          </span>
+          <button class="btn btn--text" data-action="toggle-comments">Комментарии</button>
+        `;
+        card.appendChild(footer);
+
+        const commentsWrap = document.createElement('div');
+        commentsWrap.className = 'comments';
+        commentsWrap.hidden = true;
+        commentsWrap.innerHTML = renderCommentsHTML(post);
+        card.appendChild(commentsWrap);
+
+        postsEl.appendChild(card);
+      }
+    }
+
+    function renderCommentsHTML(post) {
+      const list = (post.comments || [])
+        .sort((a,b) => a.createdAt - b.createdAt)
+        .map(c => `
+          <div class="comment">
+            <div class="comment__author">${escapeHTML(c.author || 'Гость')} <span class="card__subtitle">• ${fmtDate(c.createdAt)}</span></div>
+            <div class="comment__body">${escapeHTML(c.body)}</div>
+          </div>
+        `).join('');
+
+      return `
+        ${list || '<div class="hint">Пока нет комментариев. Будьте первым!</div>'}
+        <form class="comment-form" data-post-id="${post.id}">
+          <input class="input" name="author" placeholder="Имя (необязательно)" />
+          <textarea class="textarea" name="body" required placeholder="Ваш комментарий..."></textarea>
+          <div style="display:flex; gap:10px; justify-content:flex-end">
+            <button class="btn btn--text" type="reset">Стереть</button>
+            <button class="btn btn--secondary" type="submit">Отправить</button>
+          </div>
+        </form>
+      `;
+    }
+
+    // ========= Обработчики форм =========
+    const postForm = document.getElementById('postForm');
+    const postError = document.getElementById('postError');
+
+    postForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      postError.hidden = true;
+
+      const fd = new FormData(postForm);
+      const title = (fd.get('title') || '').toString().trim();
+      const content = (fd.get('content') || '').toString().trim();
+      const image = (fd.get('image') || '').toString().trim();
+
+      if (!title || !content) {
+        postError.textContent = 'Заполните заголовок и текст.';
+        postError.hidden = false;
+        return;
+      }
+      if (image && !/^https?:\/\//i.test(image)) {
+        postError.textContent = 'URL картинки должен начинаться с http(s)://';
+        postError.hidden = false;
+        return;
+      }
+
+      const posts = loadPosts() || [];
+      posts.push({ id: uid(), title, content, image, createdAt: Date.now(), comments: [] });
+      savePosts(posts);
+      renderPosts(posts);
+      postForm.reset();
+    });
+
+    // Делегирование на список постов: комментарии + риппл
+    postsEl.addEventListener('click', (e) => {
+      const target = e.target;
+      // Риппл на кнопках
+      if (target.classList.contains('btn')) ripple(target, e);
+
+      // Переключение комментариев
+      if (target.dataset.action === 'toggle-comments') {
+        const card = target.closest('.card');
+        if (!card) return;
+        const comments = card.querySelector('.comments');
+        comments.hidden = !comments.hidden;
+      }
+    });
+
+    // Отправка комментариев (делегирование)
+    postsEl.addEventListener('submit', (e) => {
+      const form = e.target;
+      if (!(form instanceof HTMLFormElement)) return;
+      if (!form.classList.contains('comment-form')) return;
+      e.preventDefault();
+
+      const postId = form.dataset.postId;
+      const fd = new FormData(form);
+      const author = (fd.get('author') || 'Гость').toString().trim() || 'Гость';
+      const body = (fd.get('body') || '').toString().trim();
+      if (!body) return;
+
+      const posts = loadPosts() || [];
+      const idx = posts.findIndex(p => p.id === postId);
+      if (idx === -1) return;
+      posts[idx].comments = posts[idx].comments || [];
+      posts[idx].comments.push({ id: uid(), author, body, createdAt: Date.now() });
+      savePosts(posts);
+
+      // Обновляем только секцию комментариев
+      const card = form.closest('.card');
+      const wrap = card.querySelector('.comments');
+      wrap.innerHTML = renderCommentsHTML(posts[idx]);
+
+      // Обновить счётчик в чипе
+      const chip = card.querySelector('.chip');
+      chip.textContent = `💬 ${posts[idx].comments.length}`;
+    });
+
+    // ========= Lightbox =========
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightboxImg');
+    const lightboxClose = document.getElementById('lightboxClose');
+
+    function openLightbox(src) {
+      lightboxImg.src = src;
+      lightbox.classList.add('open');
+    }
+    function closeLightbox() {
+      lightbox.classList.remove('open');
+      lightboxImg.src = '';
+    }
+    lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
+    lightboxClose.addEventListener('click', closeLightbox);
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
+
+    // ========= Кнопки экспорта/сброса =========
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      if (!confirm('Сбросить данные и загрузить демо-посты?')) return;
+      localStorage.removeItem(LS_KEY);
+      const posts = seedDemoIfEmpty();
+      renderPosts(posts);
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      const data = loadPosts() || [];
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'blog-posts.json';
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    // ========= Риппл эффект =========
+    function ripple(btn, e) {
+      const circle = document.createElement('span');
+      const rect = btn.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      circle.style.width = circle.style.height = size + 'px';
+      circle.className = 'ripple';
+      circle.style.left = (e.clientX - rect.left - size / 2) + 'px';
+      circle.style.top  = (e.clientY - rect.top  - size / 2) + 'px';
+      btn.appendChild(circle);
+      setTimeout(() => circle.remove(), 600);
+    }
+
+    // ========= Инициализация =========
+    const initial = seedDemoIfEmpty();
+    renderPosts(initial);
+  </script>
+</body>
+</html>
